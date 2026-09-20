@@ -1,0 +1,67 @@
+{
+  "name": "swagger",
+  "description": "Async Telegram bot with clearly marked mock records, UTC quotas and durable deletion queue.",
+  "keywords": [
+    "python",
+    "aiogram",
+    "telegram"
+  ],
+  "env": {
+    "BOT_TOKEN": {
+      "description": "Telegram bot token from BotFather. Keep secret."
+    },
+    "OWNER_ID": {
+      "description": "Positive numeric Telegram owner user ID."
+    },
+    "SUDO_IDS": {
+      "description": "Comma-separated trusted Telegram user IDs.",
+      "required": false,
+      "value": ""
+    },
+    "API_MODE": {
+      "description": "mock initially; http only after configuring an authorized provider.",
+      "value": "mock"
+    },
+    "API_BASE_URL": {
+      "description": "Trusted HTTPS adapter base URL. Required in http mode.",
+      "required": false,
+      "value": ""
+    },
+    "API_KEY": {
+      "description": "Optional bearer token; never commit.",
+      "required": false,
+      "value": ""
+    },
+    "DB_PATH": {
+      "description": "SQLite file. Heroku filesystem is ephemeral: demo only.",
+      "value": "data/swagger.db"
+    },
+    "BOT_MODE": {
+      "description": "polling for worker; webhook for an HTTPS web process.",
+      "value": "polling"
+    },
+    "WEBHOOK_URL": {
+      "description": "Public HTTPS origin without /telegram; webhook mode only.",
+      "required": false,
+      "value": ""
+    },
+    "WEBHOOK_SECRET": {
+      "description": "32-256 URL-safe characters; webhook mode only.",
+      "generator": "secret"
+    },
+    "PORT": {
+      "description": "HTTP health listener port; hosting platforms may override.",
+      "value": "8080"
+    }
+  },
+  "formation": {
+    "worker": {
+      "quantity": 1
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ]
+}

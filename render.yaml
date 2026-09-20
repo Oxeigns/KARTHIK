@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: swagger
+    runtime: docker
+    plan: starter
+    healthCheckPath: /healthz
+    numInstances: 1
+    disk:
+      name: swagger-data
+      mountPath: /app/data
+      sizeGB: 1
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: OWNER_ID
+        sync: false
+      - key: API_MODE
+        value: mock
+      - key: BOT_MODE
+        value: polling
+      - key: DB_PATH
+        value: /app/data/swagger.db
