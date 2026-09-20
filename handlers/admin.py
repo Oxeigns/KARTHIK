@@ -76,6 +76,14 @@ async def control(callback, db, settings):
             "Set API_MODE=http and API_BASE_URL in your host's environment settings.\n"
             "This screen shows configuration, not a connectivity test."
         )
+        if settings.api_mode == "sandbox":
+            text = (
+                "🧪 <b>HTTP sandbox</b>\n\n"
+                "Built-in fictional data service. Requests use local HTTP.\n"
+                "External API_BASE_URL and API_KEY are ignored.\n\n"
+                "Try /info demo; see Search guide for error fixtures.\n"
+                "No external provider is connected."
+            )
     elif action == "help":
         text = (
             "🛠 <b>User controls</b>\n\n"

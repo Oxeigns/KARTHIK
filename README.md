@@ -1,5 +1,37 @@
 # swagger
 
+## Fictional HTTP sandbox (no external API needed)
+
+For an existing Heroku app, deploy this branch (`codex/http-sandbox`) first,
+then set `API_MODE=sandbox` and `BOT_MODE=polling`. Keep your BOT_TOKEN,
+OWNER_ID and channel settings. API_BASE_URL and API_KEY can be removed:
+sandbox mode ignores both, including previously saved values.
+New app.json deployments and .env.example select sandbox mode.
+The code default remains http when API_MODE is absent.
+
+The bot starts its own fictional service on a random loopback port in the same
+process. APIClient makes actual POST /info and POST /num requests to that service.
+No separate app, paid API, public URL or TLS configuration is needed for the sandbox.
+The local service does not call external APIs, store queries, or expose a public route.
+Success results are always labelled DEMO, including numeric inputs.
+It shuts down with the bot. Existing HTTPS validation stays in place for http mode.
+
+Send `/start`, then `/info demo`. Owner/sudo can run repeated tests; ordinary users
+still have one valid attempt per UTC day. Failures consume that attempt too.
+
+| Command | Expected response |
+| --- | --- |
+| `/info demo` | Fictional test item, labelled DEMO |
+| `/info test-not-found` | No record found (404) |
+| `/info test-rate-limit` | Temporary error after retries (429) |
+| `/info test-server-error` | Temporary error after retries (503) |
+| `/info test-invalid-json` | Invalid JSON error |
+| `/info test-timeout` | Unavailable after the client's 10-second deadline |
+
+`mock` remains the older in-memory fixture mode; `sandbox` tests the real HTTP path.
+To use an authorized metadata provider later, explicitly set API_MODE=http and
+configure the documented compatible HTTPS contract below.
+
 ## Bot interface
 
 Owner contact: [@Notethicals](https://t.me/Notethicals). This contact link does not
@@ -17,14 +49,14 @@ The Home/Help, update opt-in and opt-out buttons use Telegram primary, success
 and danger styles; rendering depends on the Telegram client version.
 
 The supplied PrimeAPIs file is a sample personal-record response, not an API
-specification. It is not committed or integrated; HTTP mode is now the default. The file contains a response body, not a URL,
+specification. It is not committed or integrated. The file contains a response body, not a URL,
 authentication scheme or request specification. It cannot establish a live connection.
 Provider attribution has not been changed. No private-record dataset is included.
 
 
 [Open @BIT_OSINTBOT](https://t.me/BIT_OSINTBOT)
 
-[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/Oxeigns/KARTHIK/tree/codex/http-control-panel)
+[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/Oxeigns/KARTHIK/tree/codex/http-sandbox)
 
 The button targets the feature branch containing this configuration. Enter a **new**
 BOT_TOKEN in Heroku's deployment form; no real bot token is committed.
@@ -55,8 +87,9 @@ Application files are at the repository root; do not set a nested build director
 The original `swagger.zip` is retained as a snapshot, not the deployment source.
 
 Modular Python 3.11+ Telegram bot using aiogram 3.x, aiohttp and aiosqlite.
-Ships in **HTTP mode**: configure `API_BASE_URL` before starting.
-Offline fictional responses are available only with explicit `API_MODE=mock`.
+The sample environment and Heroku deploy form select **sandbox mode**.
+For external HTTP mode, explicitly set `API_MODE=http` and configure `API_BASE_URL`.
+The separate `API_MODE=mock` option returns an in-memory fictional response.
 HTTP errors never fall back to fictional results.
 No real personal-record provider is included.
 
@@ -97,7 +130,8 @@ python3.11 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
-# Edit .env: BOT_TOKEN, OWNER_ID and API_BASE_URL are required.
+# Edit .env: BOT_TOKEN and OWNER_ID are required.
+# .env.example selects sandbox; HTTP mode additionally needs API_BASE_URL.
 # Set API_KEY if your authorized metadata provider requires a bearer token.
 python bot.py
 ```
@@ -115,7 +149,7 @@ Use a non-admin account to test quota; owner/sudo are exempt.
 | BOT_TOKEN | Required | Secret BotFather token |
 | OWNER_ID | Required | Positive numeric owner Telegram ID |
 | SUDO_IDS | Empty | Comma-separated trusted admin IDs |
-| API_MODE | http | mock or http |
+| API_MODE | http in code; sandbox in sample/Heroku | sandbox, mock or http |
 | API_BASE_URL | Required for http | Trusted HTTPS origin/base path, no query credentials |
 | API_KEY | Empty | Optional Authorization Bearer secret |
 | DB_PATH | data/swagger.db | Writable persistent SQLite path |

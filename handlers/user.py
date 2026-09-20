@@ -36,6 +36,8 @@ def welcome(settings):
         if settings.api_mode == "mock"
         else "🔌 HTTP mode • Provider responses"
     )
+    if settings.api_mode == "sandbox":
+        mode = "🧪 HTTP SANDBOX — fictional data over real HTTP. Try /info demo"
     return (
         "⚡ <b>SWAGGER</b>\n<i>Your private API workspace</i>\n\n"
         f"{mode}\n\n"
@@ -111,6 +113,17 @@ async def user_callback(callback, db, settings):
             "Or <code>/num &lt;number&gt;</code> for your provider's number metadata.\n\n"
             "Each valid attempt uses your daily quota, including provider failures."
         )
+        if settings.api_mode == "sandbox":
+            text = (
+                "🧪 <b>HTTP sandbox</b>\n\n"
+                "Fictional data only. Try <code>/info demo</code>.\n"
+                "Error fixtures: <code>/info test-not-found</code>, "
+                "<code>/info test-rate-limit</code>, "
+                "<code>/info test-server-error</code>, "
+                "<code>/info test-invalid-json</code>, "
+                "<code>/info test-timeout</code>.\n\n"
+                "Daily quota still applies; owner/sudo are exempt."
+            )
     elif callback.data == "account":
         await db.register(uid)
         row = await db.one("SELECT banned,subscribed FROM users WHERE id=?", (uid,))

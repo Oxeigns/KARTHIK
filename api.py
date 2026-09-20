@@ -2,7 +2,7 @@
 
 import asyncio
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import aiohttp
 
@@ -41,9 +41,10 @@ def parse_record(payload):
 
 
 class APIClient:
-    def __init__(self, settings, session):
+    def __init__(self, settings, session, *, sandbox_url=None):
         self.settings = settings
         self.session = session
+        self.sandbox_url = sandbox_url
         self.slots = asyncio.Semaphore(20)
 
     async def search(self, kind, query):
@@ -53,6 +54,10 @@ class APIClient:
             return Record(
                 "DEMO ENTITY — fictional", "Demo provider", "Demo region", "Not assessed", True
             )
+        if self.settings.api_mode == "sandbox" and not self.sandbox_url:
+            raise APIError("HTTP sandbox is not running. Restart the bot.")
+        if self.settings.api_mode not in {"http", "sandbox"}:
+            raise APIError("Invalid API mode.")
         try:
             # Total deadline includes concurrency wait, retries, and HTTP reads.
             async with asyncio.timeout(10):
@@ -62,12 +67,14 @@ class APIClient:
             raise APIError("Provider unavailable. Please try again later.") from None
 
     async def _request(self, kind, query):
+        sandbox = self.settings.api_mode == "sandbox"
+        url = self.sandbox_url if sandbox else self.settings.api_url
         headers = {}
-        if self.settings.api_key:
+        if not sandbox and self.settings.api_key:
             headers["Authorization"] = "Bearer " + self.settings.api_key
         for attempt in range(3):
             async with self.session.post(
-                self.settings.api_url + "/" + kind,
+                url + "/" + kind,
                 json={"query": query},
                 headers=headers,
                 allow_redirects=False,
@@ -92,5 +99,6 @@ class APIClient:
                     payload = json.loads(raw)
                 except (ValueError, UnicodeError):
                     raise APIError("Provider returned invalid JSON.") from None
-                return parse_record(payload)
+                record = parse_record(payload)
+                return replace(record, demo=True) if sandbox else record
         raise APIError("Provider unavailable.")
