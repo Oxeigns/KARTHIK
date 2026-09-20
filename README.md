@@ -1,5 +1,21 @@
 # swagger
 
+## Bot interface
+
+Owner contact: [@Notethicals](https://t.me/Notethicals). This contact link does not
+change OWNER_ID or grant administrative permissions.
+Support: [community](https://t.me/+hQh4Azoq9BoxMjk1).
+The support link is separate from the existing force-subscription channel.
+
+/start shows the welcome screen; /help shows commands and privacy limits.
+The Home/Help, update opt-in and opt-out buttons use Telegram primary, success
+and danger styles; rendering depends on the Telegram client version.
+
+The supplied PrimeAPIs file is a sample personal-record response, not an API
+specification. It is not committed or integrated; mock mode remains the default.
+Provider attribution has not been changed. No private-record dataset is included.
+
+
 [Open @BIT_OSINTBOT](https://t.me/BIT_OSINTBOT)
 
 [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/Oxeigns/KARTHIK/tree/feat/force-sub-heroku)
