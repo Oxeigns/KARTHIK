@@ -1,0 +1,21 @@
+[Unit]
+Description=SWAGGER Telegram Bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=swagger
+WorkingDirectory=/opt/swagger
+EnvironmentFile=/opt/swagger/.env
+ExecStart=/opt/swagger/.venv/bin/python bot.py
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/swagger/data
+
+[Install]
+WantedBy=multi-user.target
