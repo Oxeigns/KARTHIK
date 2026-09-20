@@ -10,7 +10,9 @@ New app.json deployments and .env.example select sandbox mode.
 The code default remains http when API_MODE is absent.
 
 The bot starts its own fictional service on a random loopback port in the same
-process. APIClient makes actual POST /info and POST /num requests to that service.
+process. APIClient makes actual GET /info?query=demo and GET /num?query=... requests
+to that service. Query values are URL-encoded automatically. Sandbox POST requests
+are rejected (405); the external metadata adapter retains its documented POST contract.
 No separate app, paid API, public URL or TLS configuration is needed for the sandbox.
 The local service does not call external APIs, store queries, or expose a public route.
 Success results are always labelled DEMO, including numeric inputs.

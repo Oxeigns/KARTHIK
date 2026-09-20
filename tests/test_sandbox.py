@@ -23,13 +23,18 @@ async def test_sandbox_actual_http_ignores_external_settings_and_cleans_up():
             assert "DEMO" in card("demo", record)
             assert await client.search("num", "0000000000") == record
             assert "HTTP SANDBOX" in welcome(settings)
+            # Only GET is supported by the sandbox, proving APIClient used GET above.
+            async with session.post(url + "/info", json={"query": "demo"}) as response:
+                assert response.status == 405
+            async with session.get(url + "/info", params={"query": "a&b + / हिन्दी"}) as response:
+                assert response.status == 200
             # Validate the live server directly, including malformed requests.
-            async with session.post(url + "/info", json={"query": []}) as response:
+            async with session.get(url + "/info", params={"query": ""}) as response:
                 assert response.status == 400
-            async with session.post(url + "/info", data="invalid") as response:
+            async with session.get(url + "/info") as response:
                 assert response.status == 400
         with pytest.raises(aiohttp.ClientError):
-            await session.post(url + "/info", json={"query": "demo"})
+            await session.get(url + "/info", params={"query": "demo"})
 
 
 @pytest.mark.parametrize(

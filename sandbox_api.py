@@ -7,11 +7,7 @@ from aiohttp import web
 
 
 async def lookup(request):
-    try:
-        body = await request.json()
-    except (ValueError, UnicodeError):
-        return web.json_response({"status": False}, status=400)
-    query = body.get("query") if isinstance(body, dict) else None
+    query = request.query.get("query")
     if not isinstance(query, str) or not 1 <= len(query) <= 120:
         return web.json_response({"status": False}, status=400)
 
@@ -44,8 +40,8 @@ async def lookup(request):
 
 def create_app():
     app = web.Application(client_max_size=4096)
-    app.router.add_post("/info", lookup)
-    app.router.add_post("/num", lookup)
+    app.router.add_get("/info", lookup)
+    app.router.add_get("/num", lookup)
     return app
 
 

@@ -72,10 +72,12 @@ class APIClient:
         headers = {}
         if not sandbox and self.settings.api_key:
             headers["Authorization"] = "Bearer " + self.settings.api_key
+        request = self.session.get if sandbox else self.session.post
+        payload_args = {"params" if sandbox else "json": {"query": query}}
         for attempt in range(3):
-            async with self.session.post(
+            async with request(
                 url + "/" + kind,
-                json={"query": query},
+                **payload_args,
                 headers=headers,
                 allow_redirects=False,
             ) as response:
