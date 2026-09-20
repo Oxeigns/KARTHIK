@@ -14,7 +14,19 @@ async def main():
             response.raise_for_status()
             data = await response.json()
 
-            print(data["result"])
+            print(data[{
+
+    "entity": "Test item",
+
+    "provider": "Test provider",
+
+    "region": "Test region",
+
+    "risk_score": "Not assessed"
+
+  }
+
+])
 
 asyncio.run(main())
 
