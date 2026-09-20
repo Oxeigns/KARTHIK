@@ -28,12 +28,12 @@
       "value": ""
     },
     "API_MODE": {
-      "description": "http uses your configured HTTPS provider; mock is explicit offline testing only.",
-      "value": "http"
+      "description": "sandbox: built-in fictional HTTP service (no URL/key); http: configured provider; mock: offline fixture.",
+      "value": "sandbox"
     },
     "API_BASE_URL": {
       "description": "Trusted HTTPS adapter base URL. Required in http mode.",
-      "required": true,
+      "required": false,
       "value": ""
     },
     "API_KEY": {

@@ -38,10 +38,10 @@ class Settings:
                     int(x.strip()) for x in os.getenv("SUDO_IDS", "").split(",") if x.strip()
                 ),
                 db_path=os.getenv("DB_PATH", "data/swagger.db"),
-                api_mode=os.getenv("API_MODE", "http"),
+                api_mode=os.getenv("API_MODE", "http").strip().lower(),
                 api_url=os.getenv("API_BASE_URL", "").rstrip("/"),
                 api_key=os.getenv("API_KEY", ""),
-                mode=os.getenv("BOT_MODE", "polling"),
+                mode=os.getenv("BOT_MODE", "polling").strip().lower(),
                 webhook_url=os.getenv("WEBHOOK_URL", "").rstrip("/"),
                 webhook_secret=os.getenv("WEBHOOK_SECRET", ""),
                 port=int(os.getenv("PORT", "8080")),
@@ -54,8 +54,10 @@ class Settings:
             raise ValueError("Set a valid BOT_TOKEN")
         if s.owner_id <= 0 or any(x <= 0 for x in s.sudo_ids):
             raise ValueError("Set positive Telegram user IDs")
-        if s.api_mode not in {"mock", "http"} or s.mode not in {"polling", "webhook"}:
-            raise ValueError("Invalid API_MODE or BOT_MODE")
+        if s.api_mode not in {"mock", "http", "sandbox"}:
+            raise ValueError("API_MODE must be http, sandbox or mock")
+        if s.mode not in {"polling", "webhook"}:
+            raise ValueError("BOT_MODE must be polling or webhook")
         if not 1 <= s.port <= 65535:
             raise ValueError("Invalid PORT")
         if s.force_sub_chat_id or s.force_sub_url:

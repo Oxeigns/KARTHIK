@@ -17,6 +17,7 @@ from config import Settings
 from database import Database
 from handlers import admin, user
 from helpers import deletion_worker, housekeeping
+from sandbox_api import sandbox_endpoint
 
 log = logging.getLogger(__name__)
 
@@ -28,11 +29,14 @@ async def run(settings):
     runner = None
     tasks = []
     try:
-        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10)) as session:
+        async with (
+            sandbox_endpoint(settings.api_mode) as sandbox_url,
+            aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10)) as session,
+        ):
             dp = Dispatcher(
                 settings=settings,
                 db=db,
-                api=APIClient(settings, session),
+                api=APIClient(settings, session, sandbox_url=sandbox_url),
                 pending={},
                 broadcast_lock=asyncio.Lock(),
             )
