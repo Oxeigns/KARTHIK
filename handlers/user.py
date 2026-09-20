@@ -8,6 +8,7 @@ from aiogram.filters import Command, CommandStart
 from api import APIError
 from helpers import card
 from keyboards import user_menu
+from middlewares.subscription import membership, require_membership
 from middlewares.throttling import SearchGuard
 
 router = Router(name="user")
@@ -34,8 +35,29 @@ async def start(message, db, settings):
         await message.answer("Open a private chat to use SWAGGER.")
         return
     await db.register(message.from_user.id)
+    if not await require_membership(message, settings, message.from_user.id):
+        return
     mode = "🧪 DEMO MODE — fictional responses only.\n" if settings.api_mode == "mock" else ""
     await message.answer(mode + HELP, reply_markup=user_menu())
+
+
+@router.callback_query(F.data == "force:check")
+async def force_check(callback, settings):
+    if not callback.message or callback.message.chat.type != "private":
+        await callback.answer("Use the bot's private chat.", show_alert=True)
+        return
+    # Acknowledge promptly; getChatMember may need several seconds.
+    await callback.answer("Checking membership…")
+    state = await membership(callback.bot, settings, callback.from_user.id)
+    if state == "ok":
+        await callback.message.answer(
+            "✅ Membership verified. Send /info demo or /num followed by a number.",
+            reply_markup=user_menu(),
+        )
+    elif state == "join":
+        await callback.message.answer("Please join first. Pending join requests need approval.")
+    else:
+        await callback.message.answer("Membership check unavailable. Please contact the owner.")
 
 
 @router.message(Command("help"))

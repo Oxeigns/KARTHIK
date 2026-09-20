@@ -1,5 +1,33 @@
 # swagger
 
+[Open @BIT_OSINTBOT](https://t.me/BIT_OSINTBOT)
+
+[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/Oxeigns/KARTHIK/tree/feat/force-sub-heroku)
+
+The button targets the feature branch containing this configuration. Enter a **new**
+BOT_TOKEN in Heroku's deployment form; no real bot token is committed.
+Heroku deployment may incur charges; SQLite on Heroku remains demo-only (see below).
+
+## Required channel subscription
+
+Join link: https://t.me/+-0Kkr0dspbhlOWZl
+
+- Set FORCE_SUB_CHAT_ID to the exact private channel ID (`-100…`) in the deploy form.
+  An invite link or a positive user ID cannot substitute for this ID.
+- FORCE_SUB_URL is prefilled with the join link above.
+- Set OWNER_ID to your confirmed numeric Telegram user ID.
+- Make @BIT_OSINTBOT an administrator in the required channel.
+- Users must join before /start or searches; membership is checked again before
+  every search, before spending quota. Owner/sudo are exempt. Help and unsubscribe
+  remain accessible without membership.
+- The Join and Check buttons do not grant access by themselves. Telegram membership
+  must be confirmed; pending join requests must first be approved.
+- Lookup errors/timeouts block searches without spending quota.
+- Both channel fields must be set together; clear both only to disable force-sub.
+
+[Telegram getChatMember documentation](https://core.telegram.org/bots/api#getchatmember)
+requires bot administrator status for reliable checks of other users.
+
 Source repository: [Oxeigns/KARTHIK](https://github.com/Oxeigns/KARTHIK).
 Application files are at the repository root; do not set a nested build directory.
 The original `swagger.zip` is retained as a snapshot, not the deployment source.
@@ -69,6 +97,8 @@ Use a non-admin account to test quota; owner/sudo are exempt.
 | WEBHOOK_URL | Required for webhook | HTTPS origin; app appends /telegram |
 | WEBHOOK_SECRET | Required for webhook | 32–256 URL-safe characters |
 | PORT | 8080 | Health/webhook HTTP listener |
+| FORCE_SUB_CHAT_ID | Required in this Heroku template | Exact -100… channel ID or public @username |
+| FORCE_SUB_URL | Supplied invite link | Join button destination; never used as the channel ID |
 
 Generate a webhook secret with `python -c "import secrets; print(secrets.token_urlsafe(32))"`.
 Do not send tokens in public chats or commit .env. Rotate any exposed secret.
