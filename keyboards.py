@@ -22,6 +22,15 @@ def user_menu():
     )
 
 
+def force_sub_menu(url):
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="📢 Join channel", url=url)],
+            [InlineKeyboardButton(text="✅ I've joined — Check", callback_data="force:check")],
+        ]
+    )
+
+
 def owner_link(owner_id):
     return InlineKeyboardMarkup(
         inline_keyboard=[

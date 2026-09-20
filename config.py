@@ -21,6 +21,8 @@ class Settings:
     webhook_url: str = ""
     webhook_secret: str = field(default="", repr=False)
     port: int = 8080
+    force_sub_chat_id: str = ""
+    force_sub_url: str = ""
 
     def is_admin(self, user_id: int) -> bool:
         return user_id == self.owner_id or user_id in self.sudo_ids
@@ -43,6 +45,8 @@ class Settings:
                 webhook_url=os.getenv("WEBHOOK_URL", "").rstrip("/"),
                 webhook_secret=os.getenv("WEBHOOK_SECRET", ""),
                 port=int(os.getenv("PORT", "8080")),
+                force_sub_chat_id=os.getenv("FORCE_SUB_CHAT_ID", "").strip(),
+                force_sub_url=os.getenv("FORCE_SUB_URL", "").strip(),
             )
         except ValueError:
             raise ValueError("OWNER_ID, SUDO_IDS and PORT must be integers") from None
@@ -54,6 +58,11 @@ class Settings:
             raise ValueError("Invalid API_MODE or BOT_MODE")
         if not 1 <= s.port <= 65535:
             raise ValueError("Invalid PORT")
+        if s.force_sub_chat_id or s.force_sub_url:
+            if not re.fullmatch(r"-100[0-9]+|@[A-Za-z][A-Za-z0-9_]{4,}", s.force_sub_chat_id):
+                raise ValueError("FORCE_SUB_CHAT_ID requires exact -100... ID or @channelusername")
+            if not re.fullmatch(r"https://t\.me/[A-Za-z0-9_+/-]+", s.force_sub_url):
+                raise ValueError("FORCE_SUB_URL requires an HTTPS Telegram invite/channel link")
         if s.api_mode == "http":
             u = urlparse(s.api_url)
             if u.scheme != "https" or not u.netloc or u.username or u.query or u.fragment:

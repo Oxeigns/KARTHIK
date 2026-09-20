@@ -7,6 +7,7 @@ from aiogram import BaseMiddleware
 
 from helpers import remaining
 from keyboards import owner_link
+from middlewares.subscription import require_membership
 
 
 class SearchGuard(BaseMiddleware):
@@ -27,6 +28,9 @@ class SearchGuard(BaseMiddleware):
         if not valid:
             await event.answer("Usage: /num +15551234567 or /info demo")
             return
+        if settings.force_sub_chat_id or settings.force_sub_url:
+            if not await require_membership(event, settings, event.from_user.id):
+                return
         status = await db.reserve(event.from_user.id, settings.is_admin(event.from_user.id))
         if status != "ok":
             messages = {

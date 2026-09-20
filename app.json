@@ -7,6 +7,15 @@
     "telegram"
   ],
   "env": {
+    "FORCE_SUB_CHAT_ID": {
+      "description": "Exact required channel ID (-100...) or public @username. Bot must be channel admin.",
+      "required": true
+    },
+    "FORCE_SUB_URL": {
+      "description": "Join-channel button URL.",
+      "value": "https://t.me/+-0Kkr0dspbhlOWZl",
+      "required": true
+    },
     "BOT_TOKEN": {
       "description": "Telegram bot token from BotFather. Keep secret."
     },
