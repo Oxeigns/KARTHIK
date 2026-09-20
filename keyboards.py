@@ -2,6 +2,9 @@
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
+OWNER_URL = "https://t.me/Notethicals"
+SUPPORT_URL = "https://t.me/+hQh4Azoq9BoxMjk1"
+
 
 def keyboard(rows):
     return InlineKeyboardMarkup(
@@ -13,11 +16,24 @@ def keyboard(rows):
 
 
 def user_menu():
-    return keyboard(
-        [
-            [("Help", "help")],
-            [("Subscribe to updates", "subscribe")],
-            [("Stop updates", "unsubscribe")],
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="🏠 Home", callback_data="home", style="primary"),
+                InlineKeyboardButton(text="📘 Help", callback_data="help", style="primary"),
+            ],
+            [
+                InlineKeyboardButton(text="👑 Owner", url=OWNER_URL),
+                InlineKeyboardButton(text="💬 Support", url=SUPPORT_URL),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🔔 Get updates", callback_data="subscribe", style="success"
+                ),
+                InlineKeyboardButton(
+                    text="🔕 Stop updates", callback_data="unsubscribe", style="danger"
+                ),
+            ],
         ]
     )
 
@@ -33,9 +49,7 @@ def force_sub_menu(url):
 
 def owner_link(owner_id):
     return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="Upgrade / Contact Owner", url=f"tg://user?id={owner_id}")]
-        ]
+        inline_keyboard=[[InlineKeyboardButton(text="Upgrade / Contact Owner", url=OWNER_URL)]]
     )
 
 

@@ -17,7 +17,7 @@ search_router.message.middleware(SearchGuard())
 router.include_router(search_router)
 
 HELP = (
-    "<b>SWAGGER</b>\n"
+    "📘 <b>SWAGGER • HELP CENTRE</b>\n\n"
     "/num &lt;number&gt; — demo / authorized metadata lookup\n"
     "/info &lt;term&gt; — demo / authorized record lookup\n"
     "One valid search attempt per UTC calendar day, shared by both commands. "
@@ -26,6 +26,17 @@ HELP = (
     "Deletion cannot remove screenshots, notifications or provider logs.\n"
     "/subscribe and /unsubscribe control announcements.\n"
     "Use only records you have permission to access."
+)
+
+
+WELCOME = (
+    "⚡ <b>SWAGGER</b>\n"
+    "<i>Your Telegram workspace</i>\n\n"
+    "🧪 Demo-first • 🛡 Private chat • ⏱ Daily quota\n\n"
+    "<b>Get started</b>\n"
+    "Try <code>/info demo</code> for a fictional sample.\n"
+    "Open Help for commands and privacy limits.\n\n"
+    "👇 Choose an option below"
 )
 
 
@@ -38,7 +49,7 @@ async def start(message, db, settings):
     if not await require_membership(message, settings, message.from_user.id):
         return
     mode = "🧪 DEMO MODE — fictional responses only.\n" if settings.api_mode == "mock" else ""
-    await message.answer(mode + HELP, reply_markup=user_menu())
+    await message.answer(mode + WELCOME, reply_markup=user_menu())
 
 
 @router.callback_query(F.data == "force:check")
@@ -74,13 +85,16 @@ async def subscription(message, command, db):
     await message.answer("Announcements enabled." if enabled else "Announcements stopped.")
 
 
-@router.callback_query(F.data.in_({"help", "subscribe", "unsubscribe"}))
-async def user_callback(callback, db):
+@router.callback_query(F.data.in_({"home", "help", "subscribe", "unsubscribe"}))
+async def user_callback(callback, db, settings):
     await callback.answer()
     if not callback.message or callback.message.chat.type != "private":
         return
-    if callback.data == "help":
-        await callback.message.answer(HELP)
+    if callback.data == "home":
+        mode = "🧪 DEMO MODE — fictional responses only.\n" if settings.api_mode == "mock" else ""
+        await callback.message.answer(mode + WELCOME, reply_markup=user_menu())
+    elif callback.data == "help":
+        await callback.message.answer(HELP, reply_markup=user_menu())
     else:
         await db.subscribe(callback.from_user.id, callback.data == "subscribe")
         await callback.message.answer("Announcement preference updated.")
