@@ -290,3 +290,28 @@ async def test_dispatcher_search_routing(db):
     await dispatcher.feed_update(bot, update)
     assert (await db.one("SELECT COUNT(*) FROM searches"))[0] == 1
     assert (await db.one("SELECT COUNT(*) FROM deletions"))[0] == 2
+
+
+def test_http_default_requires_endpoint(monkeypatch):
+    monkeypatch.setenv("BOT_TOKEN", "123456:" + "A" * 35)
+    monkeypatch.setenv("OWNER_ID", "1")
+    monkeypatch.delenv("API_MODE", raising=False)
+    monkeypatch.setenv("API_BASE_URL", "")
+    monkeypatch.setenv("FORCE_SUB_CHAT_ID", "")
+    monkeypatch.setenv("FORCE_SUB_URL", "")
+    with pytest.raises(ValueError, match="HTTPS"):
+        Settings.load()
+    monkeypatch.setenv("API_BASE_URL", "https://metadata.example.invalid")
+    assert Settings.load().api_mode == "http"
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"status": False, "data": {"entity": "Ignore this"}},
+        {"data": {"status": False, "entity": "Ignore this"}},
+    ],
+)
+def test_provider_failure_is_not_a_record(payload):
+    with pytest.raises(APIError, match="unsuccessful"):
+        parse_record(payload)

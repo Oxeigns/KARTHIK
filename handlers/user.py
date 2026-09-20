@@ -6,7 +6,8 @@ from aiogram import F, Router
 from aiogram.filters import Command, CommandStart
 
 from api import APIError
-from helpers import card
+from database import utc_day
+from helpers import card, edit_panel, remaining
 from keyboards import user_menu
 from middlewares.subscription import membership, require_membership
 from middlewares.throttling import SearchGuard
@@ -18,8 +19,8 @@ router.include_router(search_router)
 
 HELP = (
     "📘 <b>SWAGGER • HELP CENTRE</b>\n\n"
-    "/num &lt;number&gt; — demo / authorized metadata lookup\n"
-    "/info &lt;term&gt; — demo / authorized record lookup\n"
+    "/num &lt;number&gt; — authorized metadata lookup\n"
+    "/info &lt;term&gt; — authorized record lookup\n"
     "One valid search attempt per UTC calendar day, shared by both commands. "
     "Failures also consume the attempt; owner/sudo are exempt.\n"
     "Results and query commands are scheduled for deletion after 60 seconds. "
@@ -29,15 +30,19 @@ HELP = (
 )
 
 
-WELCOME = (
-    "⚡ <b>SWAGGER</b>\n"
-    "<i>Your Telegram workspace</i>\n\n"
-    "🧪 Demo-first • 🛡 Private chat • ⏱ Daily quota\n\n"
-    "<b>Get started</b>\n"
-    "Try <code>/info demo</code> for a fictional sample.\n"
-    "Open Help for commands and privacy limits.\n\n"
-    "👇 Choose an option below"
-)
+def welcome(settings):
+    mode = (
+        "🧪 DEMO MODE — fictional responses only."
+        if settings.api_mode == "mock"
+        else "🔌 HTTP mode • Provider responses"
+    )
+    return (
+        "⚡ <b>SWAGGER</b>\n<i>Your private API workspace</i>\n\n"
+        f"{mode}\n\n"
+        "<b>Ready when you are</b>\n"
+        "Open Search guide for commands, or My account to check your quota.\n"
+        "Use Help for privacy and usage details."
+    )
 
 
 @router.message(CommandStart())
@@ -48,8 +53,9 @@ async def start(message, db, settings):
     await db.register(message.from_user.id)
     if not await require_membership(message, settings, message.from_user.id):
         return
-    mode = "🧪 DEMO MODE — fictional responses only.\n" if settings.api_mode == "mock" else ""
-    await message.answer(mode + WELCOME, reply_markup=user_menu())
+    await message.answer(
+        welcome(settings), reply_markup=user_menu(settings.is_admin(message.from_user.id))
+    )
 
 
 @router.callback_query(F.data == "force:check")
@@ -62,7 +68,7 @@ async def force_check(callback, settings):
     state = await membership(callback.bot, settings, callback.from_user.id)
     if state == "ok":
         await callback.message.answer(
-            "✅ Membership verified. Send /info demo or /num followed by a number.",
+            welcome(settings),
             reply_markup=user_menu(),
         )
     elif state == "join":
@@ -85,19 +91,46 @@ async def subscription(message, command, db):
     await message.answer("Announcements enabled." if enabled else "Announcements stopped.")
 
 
-@router.callback_query(F.data.in_({"home", "help", "subscribe", "unsubscribe"}))
+@router.callback_query(
+    F.data.in_({"home", "help", "subscribe", "unsubscribe", "account", "search:guide"})
+)
 async def user_callback(callback, db, settings):
     await callback.answer()
     if not callback.message or callback.message.chat.type != "private":
         return
+    uid = callback.from_user.id
+    menu = user_menu(settings.is_admin(uid))
     if callback.data == "home":
-        mode = "🧪 DEMO MODE — fictional responses only.\n" if settings.api_mode == "mock" else ""
-        await callback.message.answer(mode + WELCOME, reply_markup=user_menu())
+        text = welcome(settings)
     elif callback.data == "help":
-        await callback.message.answer(HELP, reply_markup=user_menu())
+        text = HELP
+    elif callback.data == "search:guide":
+        text = (
+            "🔎 <b>Search guide</b>\n\n"
+            "Send <code>/info &lt;record reference&gt;</code> for authorized metadata.\n"
+            "Or <code>/num &lt;number&gt;</code> for your provider's number metadata.\n\n"
+            "Each valid attempt uses your daily quota, including provider failures."
+        )
+    elif callback.data == "account":
+        await db.register(uid)
+        row = await db.one("SELECT banned,subscribed FROM users WHERE id=?", (uid,))
+        quota = await db.one("SELECT day FROM quotas WHERE user_id=?", (uid,))
+        available = "0 / 1" if quota and quota[0] == utc_day() else "1 / 1"
+        if settings.is_admin(uid):
+            available = "Unlimited (admin)"
+        text = (
+            "👤 <b>My account</b>\n\n"
+            f"ID: <code>{uid}</code>\n"
+            f"Access: {'Restricted' if row[0] else 'Active'}\n"
+            f"Attempts remaining: {available}\n"
+            f"Quota resets in: {remaining()} (UTC)\n"
+            f"Announcements: {'On' if row[1] else 'Off'}"
+        )
     else:
-        await db.subscribe(callback.from_user.id, callback.data == "subscribe")
-        await callback.message.answer("Announcement preference updated.")
+        enabled = callback.data == "subscribe"
+        await db.subscribe(uid, enabled)
+        text = "🔔 Announcements enabled." if enabled else "🔕 Announcements stopped."
+    await edit_panel(callback.message, text, menu)
 
 
 @search_router.message(Command("num", "info"))

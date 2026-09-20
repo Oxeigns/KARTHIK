@@ -8,6 +8,7 @@ from aiogram import F, Router
 from aiogram.exceptions import TelegramAPIError, TelegramForbiddenError, TelegramRetryAfter
 from aiogram.filters import Command
 
+from helpers import edit_panel
 from keyboards import admin_menu, keyboard, user_pages
 from middlewares.auth import AdminGuard
 
@@ -16,13 +17,23 @@ router.message.middleware(AdminGuard())
 router.callback_query.middleware(AdminGuard())
 
 
-@router.message(Command("admin", "stats"))
-async def panel(message, db):
+async def overview(db, settings):
     users, searches = await db.stats()
-    await message.answer(
-        f"<b>Admin panel</b>\nUsers: {users}\nSearch attempts (30d): {searches}",
-        reply_markup=admin_menu(),
-    )
+    paused = await db.maintenance()
+    return (
+        "⚙️ <b>SWAGGER · CONTROL PANEL</b>\n\n"
+        f"Service: {'⏸ Paused' if paused else '▶️ Active'}\n"
+        f"Users: <b>{users}</b>\n"
+        f"Search attempts (30d): <b>{searches}</b>\n"
+        f"API mode: <b>{settings.api_mode.upper()}</b>\n\n"
+        "Manage access, review activity and check API configuration."
+    ), admin_menu(paused)
+
+
+@router.message(Command("admin", "stats"))
+async def panel(message, db, settings):
+    text, menu = await overview(db, settings)
+    await message.answer(text, reply_markup=menu)
 
 
 @router.message(Command("ban", "unban", "reset"))
@@ -45,15 +56,35 @@ async def change_user(message, command, db, settings):
 
 
 @router.callback_query(F.data.startswith("admin:"))
-async def control(callback, db):
+async def control(callback, db, settings):
     await callback.answer()
+    if not callback.message or callback.message.chat.type != "private":
+        return
     action = callback.data.split(":")[1]
-    if action in {"on", "off"}:
-        await db.set_maintenance(action == "on")
-        await callback.message.answer(f"Maintenance: {action}")
-    elif action == "stats":
-        users, searches = await db.stats()
-        await callback.message.answer(f"Users: {users}\nSearch attempts (30d): {searches}")
+    menu = admin_menu(await db.maintenance())
+    if action in {"on", "off", "stats"}:
+        if action in {"on", "off"}:
+            await db.set_maintenance(action == "on")
+        text, menu = await overview(db, settings)
+    elif action == "api":
+        text = (
+            "🔌 <b>API configuration</b>\n\n"
+            f"Mode: <b>{settings.api_mode.upper()}</b>\n"
+            f"Base URL: {'Configured' if settings.api_url else 'Missing'}\n"
+            f"Bearer token: {'Configured' if settings.api_key else 'Not set'}\n\n"
+            "HTTP requests use POST /info or /num with a JSON query field.\n"
+            "Set API_MODE=http and API_BASE_URL in your host's environment settings.\n"
+            "This screen shows configuration, not a connectivity test."
+        )
+    elif action == "help":
+        text = (
+            "🛠 <b>User controls</b>\n\n"
+            "<code>/ban USER_ID</code> · Restrict access\n"
+            "<code>/unban USER_ID</code> · Restore access\n"
+            "<code>/reset USER_ID</code> · Reset daily quota\n\n"
+            "📣 <code>/broadcast MESSAGE</code> previews an announcement. "
+            "Delivery requires confirmation and reaches opted-in users only."
+        )
     elif action == "users":
         try:
             page = int(callback.data.split(":")[2])
@@ -64,12 +95,14 @@ async def control(callback, db):
         rows = await db.all(
             "SELECT id,banned FROM users ORDER BY id LIMIT 11 OFFSET ?", (page * 10,)
         )
-        text = "\n".join(
-            f"<code>{r['id']}</code> — {'banned' if r['banned'] else 'active'}" for r in rows[:10]
+        lines = "\n".join(
+            f"{'🔴' if r['banned'] else '🟢'} <code>{r['id']}</code>" for r in rows[:10]
         )
-        await callback.message.answer(
-            text or "No users.", reply_markup=user_pages(page, len(rows) > 10)
-        )
+        text = f"👥 <b>Users · Page {page + 1}</b>\n\n" + (lines or "No users.")
+        menu = user_pages(page, len(rows) > 10)
+    else:
+        return
+    await edit_panel(callback.message, text, menu)
 
 
 @router.message(Command("broadcast"))

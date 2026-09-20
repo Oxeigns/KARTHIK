@@ -82,6 +82,7 @@ async def test_no_quota_spent_and_leaving_blocks_next_search(tmp_path):
 
 
 def test_incomplete_config_rejected(monkeypatch):
+    monkeypatch.setenv("API_MODE", "mock")
     monkeypatch.setenv("BOT_TOKEN", "123456:" + "A" * 35)
     monkeypatch.setenv("OWNER_ID", "1")
     monkeypatch.setenv("FORCE_SUB_URL", "https://t.me/+example")

@@ -1,4 +1,4 @@
-"""Mock provider and an explicit, provider-neutral HTTP adapter contract."""
+"""Bounded HTTP metadata adapter; offline samples require explicit mock mode."""
 
 import asyncio
 import json
@@ -24,6 +24,8 @@ def parse_record(payload):
     if not isinstance(payload, dict) or not isinstance(payload.get("data"), dict):
         raise APIError("Provider returned an invalid response.")
     data = payload["data"]
+    if payload.get("status") is False or data.get("status") is False:
+        raise APIError("Provider reported an unsuccessful response.")
     fields = ("entity", "provider", "region", "risk_score")
     if not any(data.get(k) is not None for k in fields):
         raise APIError("No record found.")

@@ -14,7 +14,7 @@ class Settings:
     owner_id: int
     sudo_ids: frozenset[int] = frozenset()
     db_path: str = "data/swagger.db"
-    api_mode: str = "mock"
+    api_mode: str = "http"
     api_url: str = ""
     api_key: str = field(default="", repr=False)
     mode: str = "polling"
@@ -38,7 +38,7 @@ class Settings:
                     int(x.strip()) for x in os.getenv("SUDO_IDS", "").split(",") if x.strip()
                 ),
                 db_path=os.getenv("DB_PATH", "data/swagger.db"),
-                api_mode=os.getenv("API_MODE", "mock"),
+                api_mode=os.getenv("API_MODE", "http"),
                 api_url=os.getenv("API_BASE_URL", "").rstrip("/"),
                 api_key=os.getenv("API_KEY", ""),
                 mode=os.getenv("BOT_MODE", "polling"),

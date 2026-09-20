@@ -85,3 +85,12 @@ async def housekeeping(db):
         now = datetime.now(timezone.utc)
         midnight = (now + timedelta(days=1)).replace(hour=0, minute=0, second=1, microsecond=0)
         await asyncio.sleep((midnight - now).total_seconds())
+
+
+async def edit_panel(message, text, reply_markup):
+    """Navigate in place; handle repeated taps without hiding other API errors."""
+    try:
+        await message.edit_text(text, reply_markup=reply_markup)
+    except TelegramBadRequest as exc:
+        if "message is not modified" not in str(exc).lower():
+            raise
