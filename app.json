@@ -1,6 +1,6 @@
 {
   "name": "swagger",
-  "description": "Async Telegram bot with clearly marked mock records, UTC quotas and durable deletion queue.",
+  "description": "HTTP Telegram workspace with a coloured control panel and UTC quotas.",
   "keywords": [
     "python",
     "aiogram",
@@ -28,12 +28,12 @@
       "value": ""
     },
     "API_MODE": {
-      "description": "mock initially; http only after configuring an authorized provider.",
-      "value": "mock"
+      "description": "http uses your configured HTTPS provider; mock is explicit offline testing only.",
+      "value": "http"
     },
     "API_BASE_URL": {
       "description": "Trusted HTTPS adapter base URL. Required in http mode.",
-      "required": false,
+      "required": true,
       "value": ""
     },
     "API_KEY": {

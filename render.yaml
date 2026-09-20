@@ -15,7 +15,11 @@ services:
       - key: OWNER_ID
         sync: false
       - key: API_MODE
-        value: mock
+        value: http
+      - key: API_BASE_URL
+        sync: false
+      - key: API_KEY
+        sync: false
       - key: BOT_MODE
         value: polling
       - key: DB_PATH

@@ -48,8 +48,8 @@ async def run(settings):
             await bot.set_my_commands(
                 [
                     BotCommand(command="start", description="Start / help"),
-                    BotCommand(command="num", description="Demo or authorized number lookup"),
-                    BotCommand(command="info", description="Demo or authorized record lookup"),
+                    BotCommand(command="num", description="Authorized number metadata"),
+                    BotCommand(command="info", description="Authorized record metadata"),
                     BotCommand(command="help", description="Usage and privacy"),
                     BotCommand(command="unsubscribe", description="Stop announcements"),
                 ]

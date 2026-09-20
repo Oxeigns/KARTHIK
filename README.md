@@ -8,17 +8,23 @@ Support: [community](https://t.me/+hQh4Azoq9BoxMjk1).
 The support link is separate from the existing force-subscription channel.
 
 /start shows the welcome screen; /help shows commands and privacy limits.
+The home screen includes Search guide, My account, quota and announcement settings.
+Owner/sudo users also see Control panel: overview, paginated users, API setup,
+user-control instructions and a state-aware pause/resume button. Navigation edits
+the current message, including repeated taps, instead of adding another message.
+API setup reports configuration presence only; it does not claim connectivity.
 The Home/Help, update opt-in and opt-out buttons use Telegram primary, success
 and danger styles; rendering depends on the Telegram client version.
 
 The supplied PrimeAPIs file is a sample personal-record response, not an API
-specification. It is not committed or integrated; mock mode remains the default.
+specification. It is not committed or integrated; HTTP mode is now the default. The file contains a response body, not a URL,
+authentication scheme or request specification. It cannot establish a live connection.
 Provider attribution has not been changed. No private-record dataset is included.
 
 
 [Open @BIT_OSINTBOT](https://t.me/BIT_OSINTBOT)
 
-[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/Oxeigns/KARTHIK/tree/feat/force-sub-heroku)
+[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/Oxeigns/KARTHIK/tree/codex/http-control-panel)
 
 The button targets the feature branch containing this configuration. Enter a **new**
 BOT_TOKEN in Heroku's deployment form; no real bot token is committed.
@@ -49,7 +55,9 @@ Application files are at the repository root; do not set a nested build director
 The original `swagger.zip` is retained as a snapshot, not the deployment source.
 
 Modular Python 3.11+ Telegram bot using aiogram 3.x, aiohttp and aiosqlite.
-Ships in **mock mode**: every response is fictional and explicitly labelled DEMO.
+Ships in **HTTP mode**: configure `API_BASE_URL` before starting.
+Offline fictional responses are available only with explicit `API_MODE=mock`.
+HTTP errors never fall back to fictional results.
 No real personal-record provider is included.
 
 ## Status and operational limits
@@ -89,12 +97,14 @@ python3.11 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
-# Edit .env: BOT_TOKEN and OWNER_ID are required.
+# Edit .env: BOT_TOKEN, OWNER_ID and API_BASE_URL are required.
+# Set API_KEY if your authorized metadata provider requires a bearer token.
 python bot.py
 ```
 
-Start a private chat, send `/start`, then `/info demo`.
-All returned fields say DEMO; entering a phone number does not look anyone up.
+Start a private chat and send `/start`. Use Search guide for command syntax.
+HTTP mode sends your query to the configured metadata adapter; no data is fabricated.
+For offline UI testing, explicitly set `API_MODE=mock` and send `/info demo`.
 A second standard-user request is blocked until midnight UTC.
 Use a non-admin account to test quota; owner/sudo are exempt.
 
@@ -105,7 +115,7 @@ Use a non-admin account to test quota; owner/sudo are exempt.
 | BOT_TOKEN | Required | Secret BotFather token |
 | OWNER_ID | Required | Positive numeric owner Telegram ID |
 | SUDO_IDS | Empty | Comma-separated trusted admin IDs |
-| API_MODE | mock | mock or http |
+| API_MODE | http | mock or http |
 | API_BASE_URL | Required for http | Trusted HTTPS origin/base path, no query credentials |
 | API_KEY | Empty | Optional Authorization Bearer secret |
 | DB_PATH | data/swagger.db | Writable persistent SQLite path |
@@ -136,7 +146,7 @@ Do not send tokens in public chats or commit .env. Rotate any exposed secret.
 The admin menu offers maintenance ON/OFF and paginated user IDs.
 Do not add untrusted users to SUDO_IDS: sudo users have administrative powers.
 
-## Add the real API later
+## Configure the HTTP metadata API
 
 The HTTP adapter is deliberately explicit and **not provider-specific**.
 Connect only an authorized, consent-based data source. Do not integrate leaked
@@ -171,8 +181,8 @@ No generic raw-JSON dump or arbitrary URL fetching is exposed to Telegram users.
 
 When your documentation is available, adapt APIClient._request and parse_record
 to the real method, authentication, paths, field mapping and consent checks,
-then add provider fixtures to tests. Set API_MODE=http only after verifying that
-contract. Unknown provider responses cannot be integrated just by setting an API key.
+then add provider fixtures to tests. Verify the contract before starting in HTTP mode.
+Unknown provider responses cannot be integrated just by setting an API key.
 
 The full operation deadline is 10 seconds, including semaphore wait and retries.
 HTTP 429/5xx receive up to three attempts with bounded backoff. Other HTTP statuses,
